@@ -1,8 +1,6 @@
 # SVGEval
 
-SVGEval 用于评估“图像二值化结果再转换为 SVG”之后的效果。它不依赖人工标注 ground truth，而是把二值图作为参考，检查 SVG 渲染回像素后是否忠实保留二值结果，同时统计二值图和 SVG 的结构复杂度。
-
-输出是一个 CSV 表格：第一行是全部样本的平均值，后面每一行是单个样本的指标。
+SVGEval用于评估和统计二值化的效果和图像转SVG之后的结构复杂度。
 
 ## 1. 克隆代码
 
@@ -11,24 +9,19 @@ git clone https://github.com/Junyiggg/SVGEval.git
 cd SVGEval
 ```
 
-如果你是直接下载 zip，也可以解压后进入项目根目录。
+也可以直接下载解压。
 
 ## 2. 创建环境
 
-推荐使用 Python 3.10 或更高版本。
+推荐使用Python 3.10或更高版本。
 
-使用 conda：
+使用conda：
 
 ```bash
 conda create -n svgeval python=3.10
 conda activate svgeval
 ```
 
-或者使用已有环境：
-
-```bash
-python --version
-```
 
 ## 3. 安装依赖
 
@@ -38,12 +31,12 @@ pip install -r requirements.txt
 
 依赖包括：
 
-- `pillow`：读取二值图、处理 SVG 渲染后的 PNG。
+- `pillow`：读取二值图、处理SVG渲染后的PNG。
 - `numpy`：像素级计算。
 - `scikit-image`：连通域统计。
-- `cairosvg`：把 SVG 渲染回像素图。
+- `cairosvg`：把SVG渲染回像素图。
 
-Windows 上如果 `cairosvg` 报 Cairo 相关错误，建议用 conda-forge 安装：
+Windows上如果`cairosvg`报Cairo相关错误，建议用conda-forge安装：
 
 ```bash
 conda install -c conda-forge cairosvg
@@ -51,7 +44,7 @@ conda install -c conda-forge cairosvg
 
 ## 4. 整理输入文件夹
 
-程序需要两个文件夹：
+需要准备两个文件夹：
 
 ```text
 your_data/
@@ -65,13 +58,12 @@ your_data/
 
 要求：
 
-- `binaries/` 放二值化结果图，支持 `.png/.jpg/.jpeg/.bmp/.webp/.tif/.tiff`。
-- `svgs/` 放 SVG 结果，扩展名为 `.svg`。
-- 样本通过文件名 stem 配对，例如 `sample_001.png` 对应 `sample_001.svg`。
-- 文件夹可以有子目录，但同一个输入类型里不能出现重复 stem。
-- 默认约定是黑色前景、白色背景。
+- `binaries/`放二值化结果图，支持 `.png/.jpg/.jpeg/.bmp/.webp/.tif/.tiff`。
+- `svgs/`放SVG结果，扩展名为`.svg`。
+- 样本通过文件名配对，例如`sample_001.png`对应`sample_001.svg`。
+- 文件夹可以有子目录，但同一个输入类型里不能出现重复前缀名称。
 
-没有配对成功的文件不会参与平均值，清单会写到 `unmatched_files.txt`。
+没有配对成功的文件会被单独记录。
 
 ## 5. 运行评估
 
@@ -84,14 +76,6 @@ python -m binary_svg_eval.evaluate \
   --out-dir "path/to/output"
 ```
 
-Windows PowerShell 可以写成：
-
-```powershell
-python -m binary_svg_eval.evaluate `
-  --binary-root "D:\data\binaries" `
-  --svg-root "D:\data\svgs" `
-  --out-dir "D:\data\svgeval_output"
-```
 
 ## 6. 查看输出
 
@@ -102,27 +86,8 @@ evaluation.csv
 unmatched_files.txt
 ```
 
-`evaluation.csv` 的第一行 `row_type` 为 `AVERAGE`，表示所有样本的平均值；后面每行 `row_type` 为 `SAMPLE`，表示单个样本的结果。
+`evaluation.csv`的第一行`row_type`为`AVERAGE`，表示所有样本的平均值；后面每行`row_type`为`SAMPLE`，表示单个样本的结果。
 
-CSV 包含这些列：
-
-```text
-row_type
-sample_name
-binary_file
-svg_file
-foreground_area_ratio
-component_count
-small_component_count
-small_component_ratio
-svg_binary_precision
-ssim_binary_svg
-num_paths
-num_path_commands
-tiny_path_count
-tiny_path_ratio
-notes
-```
 
 ## 7. 指标说明
 
@@ -190,9 +155,3 @@ SVG 中 `<path>` 元素的数量。
 
 这个指标用于判断 SVG 中碎片路径的占比。`tiny_path_count` 高说明小碎片多；`tiny_path_ratio` 高说明 SVG 的路径结构主要由小碎片组成。它适合和 `small_component_count` 一起看：如果二值图小连通域很多，问题可能来自二值化；如果二值图较干净但 tiny path 很多，问题可能来自 SVG 转换过程。
 
-## 8. 注意事项
-
-- 本工具不输出综合评分，因为没有人工标注 ground truth。
-- 指标应该分开看：二值图结构、SVG 像素一致性、SVG 路径复杂度分别反映不同问题。
-- 当前版本默认黑色为前景，白色为背景。
-- CSV 使用 UTF-8 with BOM 编码，便于在 Excel 中直接打开。
