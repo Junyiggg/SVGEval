@@ -76,6 +76,12 @@ python -m binary_svg_eval.evaluate \
   --out-dir "path/to/output"
 ```
 
+运行时会在终端打印进度条，显示总样本数、已完成样本数和百分比：
+
+```text
+Progress [###############---------------] 3/6 completed ( 50.0%)
+```
+
 
 ## 6. 查看输出
 
