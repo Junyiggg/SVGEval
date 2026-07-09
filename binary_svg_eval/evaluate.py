@@ -113,8 +113,11 @@ def evaluate_folder_pair(binary_root: Path, svg_root: Path) -> tuple[list[dict[s
     unmatched_svg = [svg_map[name] for name in sorted(set(svg_map) - set(binary_map))]
 
     rows = []
-    for sample_name in matched_names:
+    total = len(matched_names)
+    print_progress(0, total)
+    for completed, sample_name in enumerate(matched_names, start=1):
         rows.append(evaluate_one(sample_name, binary_map[sample_name], svg_map[sample_name]))
+        print_progress(completed, total)
     return rows, unmatched_binary, unmatched_svg
 
 
@@ -134,6 +137,16 @@ def build_unique_stem_map(paths: Iterable[Path], label: str) -> dict[str, Path]:
             lines.extend(f"    {path}" for path in found)
         raise ValueError("\n".join(lines))
     return {stem: found[0] for stem, found in by_stem.items()}
+
+
+def print_progress(completed: int, total: int, width: int = 30) -> None:
+    if total <= 0:
+        return
+    ratio = min(1.0, max(0.0, completed / float(total)))
+    filled = int(round(width * ratio))
+    bar = "#" * filled + "-" * (width - filled)
+    message = f"\rProgress [{bar}] {completed}/{total} completed ({ratio * 100:5.1f}%)"
+    print(message, end="" if completed < total else "\n", flush=True)
 
 
 def evaluate_one(sample_name: str, binary_path: Path, svg_path: Path) -> dict[str, object]:
